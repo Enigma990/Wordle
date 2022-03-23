@@ -19,6 +19,11 @@ public class TileManager : MonoBehaviour
 
     private GameObject[,] tilesList;
 
+
+    public int RowCount { get { return rowCount; } }
+    public int ColumnCount { get { return columnCount; } }
+
+
     private void Awake()
     {
         instance = this;
@@ -51,5 +56,10 @@ public class TileManager : MonoBehaviour
     public void AddDataToTile(int _row, int _column, string _Data)
     {
         tilesList[_row, _column].GetComponentInChildren<TMP_Text>().text = _Data;
+    }
+
+    public void ChangeTileColor(int _row, int _column, Color _color)
+    {
+        tilesList[_row, _column].GetComponent<Image>().color = _color;
     }
 }
