@@ -32,6 +32,8 @@ public class TileManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        columnCount = PlayerPrefs.GetInt("WordsCount");
+
         tilesList = new GameObject[rowCount, columnCount];
 
         tilesGrid.constraintCount = columnCount;
