@@ -16,7 +16,13 @@ public class GameManager : MonoBehaviour
     private int columnCount;
     private int rowCount;
 
-    private string Word = "HELLO";
+    public string selectedWord = "HELLO";
+
+
+    [SerializeField] TextAsset wordsListAsset = null;
+
+    List<String> selectedWordsList;
+
 
     //List<string> guessedWord = new List<string>();
 
@@ -25,6 +31,8 @@ public class GameManager : MonoBehaviour
     private void Awake()
     {
         instance = this;
+
+        selectedWordsList = new List<string>(wordsListAsset.text.Split(new char[] { ',', ' ', '\n', '\r' }, System.StringSplitOptions.RemoveEmptyEntries));
     }
 
     // Start is called before the first frame update
@@ -35,6 +43,9 @@ public class GameManager : MonoBehaviour
 
         columnCount = TileManager.Instance.ColumnCount;
         rowCount = TileManager.Instance.RowCount;
+
+        selectedWord = selectedWordsList[UnityEngine.Random.Range(0, selectedWordsList.Count)];
+        selectedWord = selectedWord.ToUpper();
     }
 
     // Update is called once per frame
@@ -56,10 +67,13 @@ public class GameManager : MonoBehaviour
             guessedWord += key;
             currentColumn++;
         }
+
     }
 
     public void OnClick_EnterPressed()
     {
+
+        Debug.LogError("WORD: " + guessedWord);
         if (currentRow >= rowCount) return;
 
         if (currentColumn < rowCount - 1)
@@ -80,6 +94,7 @@ public class GameManager : MonoBehaviour
         if (currentColumn <= 0) return; 
 
         currentColumn--;
+        guessedWord = guessedWord.Remove(currentColumn);
 
         OnClick_KeyPressed("");
     }
@@ -92,7 +107,7 @@ public class GameManager : MonoBehaviour
         //    tempWord += s;
         //}
 
-        if (Word.Equals(guessedWord))
+        if (selectedWord.Equals(guessedWord))
         {
             Debug.LogError("EQUAL: " + guessedWord);
         }
@@ -100,11 +115,11 @@ public class GameManager : MonoBehaviour
 
         for (int i = 0; i < columnCount; i++)
         {
-            if (Word.Contains(guessedWord[i]))
+            if (selectedWord.Contains(guessedWord[i]))
             {
                 Debug.Log("WORD FOUND: " + guessedWord[i]);
 
-                if (Word[i] == guessedWord[i])
+                if (selectedWord[i] == guessedWord[i])
                 {
                     TileManager.Instance.ChangeTileColor(currentRow, i, Color.green);
                     KeyboardManager.Instance.UpdateKeyboardColor(guessedWord[i].ToString(), Color.green);
@@ -114,8 +129,10 @@ public class GameManager : MonoBehaviour
                     TileManager.Instance.ChangeTileColor(currentRow, i, Color.yellow);
                     KeyboardManager.Instance.UpdateKeyboardColor(guessedWord[i].ToString(), Color.yellow);
                 }
-
-                
+            }
+            else
+            {
+                KeyboardManager.Instance.UpdateKeyboardColor(guessedWord[i].ToString(), Color.grey);
             }
         }
 

@@ -326,6 +326,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19763f2f00424b540930356465462f54, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  wordsListAsset: {fileID: 4900000, guid: e31ca31f7c19771438ed27f3aea0a085, type: 3}
 --- !u!114 &977240815 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 4429871600278854063, guid: 497b5fd3df212664197460d3adaa2d06, type: 3}
