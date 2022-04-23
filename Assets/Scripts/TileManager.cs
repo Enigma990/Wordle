@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using DG.Tweening;
 
 public class TileManager : MonoBehaviour
 {
@@ -52,7 +53,12 @@ public class TileManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+
+    }
+
+    public void ShakeTile(int _row, int _column)
+    {
+        tilesList[_row, _column].gameObject.transform.DOShakePosition(1.0f, 3, 15);
     }
 
     public void AddDataToTile(int _row, int _column, string _Data)
@@ -62,6 +68,19 @@ public class TileManager : MonoBehaviour
 
     public void ChangeTileColor(int _row, int _column, Color _color)
     {
+        tilesList[_row, _column].gameObject.transform.DORotate(new Vector3(360, 0, 0), 1.0f, RotateMode.Fast).SetRelative(true).SetEase(Ease.Linear);
         tilesList[_row, _column].GetComponent<Image>().color = _color;
+    }
+
+    public void ResetTileColor()
+    {
+        for (int i = 0; i < rowCount; i++)
+        {
+            for (int j = 0; j < columnCount; j++)
+            {
+                tilesList[i, j].GetComponent<Image>().color = Color.gray;
+                tilesList[i, j].GetComponentInChildren<TMP_Text>().text = "";
+            }
+        }
     }
 }

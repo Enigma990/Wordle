@@ -45,5 +45,30 @@ public class MenuManager : MonoBehaviour
         PlayerPrefs.SetInt("WordsCount", _wordsCount);
 
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+
+        Constant.currentGamemode = Constant.GameMode.Classic;
+    }
+
+    public void OnClick_BlindMode()
+    {
+        PlayerPrefs.SetInt("WordsCount", 5);
+
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+
+        Constant.currentGamemode = Constant.GameMode.Blind;
+    }
+
+    public void OnClick_TimeTrail()
+    {
+        PlayerPrefs.SetInt("WordsCount", 5);
+
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+
+        Constant.currentGamemode = Constant.GameMode.TimeTrail;
+    }
+
+    public void OnClick_ExitBtn()
+    {
+        Application.Quit();
     }
 }

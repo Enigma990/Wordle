@@ -38,4 +38,12 @@ public class KeyboardManager : MonoBehaviour
             }
         }
     }
+
+    public void ResetKeys()
+    {
+        for (int i = 0; i < keyboardKeys.Length; i++)
+        {
+            keyboardKeys[i].GetComponent<Image>().color = Color.white;
+        }
+    }
 }

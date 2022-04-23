@@ -4,6 +4,8 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
+using TMPro;
+using DG.Tweening;
 
 public class GameManager : MonoBehaviour
 {
@@ -11,18 +13,28 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get { return instance; } }
 
     private int currentColumn = 0;
+    [SerializeField]
     private int currentRow = 0;
 
     private int columnCount;
+    [SerializeField]
     private int rowCount;
-
-    public string selectedWord = "HELLO";
-
+    [SerializeField]
+    private string selectedWord = "HELLO";
+    public string SelecctedWord { get { return selectedWord; } }
 
     [SerializeField] TextAsset wordsListAsset = null;
 
     List<String> selectedWordsList;
 
+    [Header("Time Trail Data")]
+    [SerializeField] private int timeLeft = 60;
+    [SerializeField] private TMP_Text timeLeftText;
+    [SerializeField] private TMP_Text correctGuessCountText;
+    private int correctGuessCount;
+
+    [Space]
+    [SerializeField] private TMP_Text invalidWordText;
 
     //List<string> guessedWord = new List<string>();
 
@@ -46,6 +58,24 @@ public class GameManager : MonoBehaviour
 
         selectedWord = selectedWordsList[UnityEngine.Random.Range(0, selectedWordsList.Count)];
         selectedWord = selectedWord.ToUpper();
+
+        invalidWordText.gameObject.SetActive(false);
+
+        if (Constant.currentGamemode == Constant.GameMode.TimeTrail)
+        {
+            correctGuessCountText.gameObject.SetActive(true);
+            timeLeftText.gameObject.SetActive(true);
+
+            correctGuessCount = 0;
+            correctGuessCountText.text = $"Correct Guesses: { correctGuessCount }";
+            timeLeftText.text = $"Time: { timeLeft }";
+            InvokeRepeating(nameof(CheckTimer), 0.0f, 1.0f);
+        }
+        else
+        {
+            correctGuessCountText.gameObject.SetActive(false);
+            timeLeftText.gameObject.SetActive(false);
+        }
     }
 
     // Update is called once per frame
@@ -68,17 +98,32 @@ public class GameManager : MonoBehaviour
             currentColumn++;
         }
 
+
+        Handheld.Vibrate();
     }
 
     public void OnClick_EnterPressed()
     {
-
-        Debug.LogError("WORD: " + guessedWord);
         if (currentRow >= rowCount) return;
 
         if (currentColumn < rowCount - 1)
         {
             // TODO - Display Invalid Warning
+            return;
+        }
+
+        if (!selectedWordsList.Contains(guessedWord))
+        {
+            Handheld.Vibrate();
+
+            for (int i = 0; i < columnCount; i++)
+            {
+                TileManager.Instance.ShakeTile(currentRow, i);
+            }
+
+            invalidWordText.DOFade(100, 0.1f);
+            invalidWordText.gameObject.SetActive(true);
+            invalidWordText.DOFade(0, 3.0f);
             return;
         }
 
@@ -101,43 +146,142 @@ public class GameManager : MonoBehaviour
 
     void CheckWord()
     {
-        //string tempWord = "";
-        //foreach (string s in guessedWord)
-        //{
-        //    tempWord += s;
-        //}
+        bool bIsCorrectWord = false;
 
         if (selectedWord.Equals(guessedWord))
         {
             Debug.LogError("EQUAL: " + guessedWord);
+
+            //ScoreManager.Instance.GameOver(currentRow, rowCount - 1);
+
+            bIsCorrectWord = true;
         }
 
-
-        for (int i = 0; i < columnCount; i++)
+        // Classic Game mode
+        if (Constant.currentGamemode == Constant.GameMode.Classic)
         {
-            if (selectedWord.Contains(guessedWord[i]))
+            for (int i = 0; i < columnCount; i++)
             {
-                Debug.Log("WORD FOUND: " + guessedWord[i]);
-
-                if (selectedWord[i] == guessedWord[i])
+                if (selectedWord.Contains(guessedWord[i]))
                 {
-                    TileManager.Instance.ChangeTileColor(currentRow, i, Color.green);
-                    KeyboardManager.Instance.UpdateKeyboardColor(guessedWord[i].ToString(), Color.green);
+                    //Debug.Log("WORD FOUND: " + guessedWord[i]);
+
+                    if (selectedWord[i] == guessedWord[i])
+                    {
+                        TileManager.Instance.ChangeTileColor(currentRow, i, Color.green);
+                        KeyboardManager.Instance.UpdateKeyboardColor(guessedWord[i].ToString(), Color.green);
+                    }
+                    else
+                    {
+                        TileManager.Instance.ChangeTileColor(currentRow, i, Color.yellow);
+                        KeyboardManager.Instance.UpdateKeyboardColor(guessedWord[i].ToString(), Color.yellow);
+                    }
                 }
                 else
                 {
-                    TileManager.Instance.ChangeTileColor(currentRow, i, Color.yellow);
-                    KeyboardManager.Instance.UpdateKeyboardColor(guessedWord[i].ToString(), Color.yellow);
+                    TileManager.Instance.ChangeTileColor(currentRow, i, Color.gray);
+                    KeyboardManager.Instance.UpdateKeyboardColor(guessedWord[i].ToString(), Color.gray);
                 }
-            }
-            else
-            {
-                KeyboardManager.Instance.UpdateKeyboardColor(guessedWord[i].ToString(), Color.grey);
             }
         }
 
-        //guessedWord.Clear();
+        // Blind Game Mode
+        else if (Constant.currentGamemode == Constant.GameMode.Blind)
+        {
+            for (int i = 0; i < columnCount; i++)
+            {
+                if (selectedWord.Contains(guessedWord[i]))
+                {
+                    //Debug.Log("WORD FOUND: " + guessedWord[i]);
 
+                    if (selectedWord[i] == guessedWord[i])
+                    {
+                        TileManager.Instance.ChangeTileColor(currentRow, i, Color.green);
+                        TileManager.Instance.AddDataToTile(currentRow, i, "");
+                    }
+                    else
+                    {
+                        TileManager.Instance.ChangeTileColor(currentRow, i, Color.yellow);
+                        TileManager.Instance.AddDataToTile(currentRow, i, "");
+                    }
+                }
+                else
+                {
+                    TileManager.Instance.ChangeTileColor(currentRow, i, Color.black);
+                    TileManager.Instance.AddDataToTile(currentRow, i, "");
+                }
+            }
+        }
+
+        // Time Trail Game mode
+        else if (Constant.currentGamemode == Constant.GameMode.TimeTrail)
+        {
+            for (int i = 0; i < columnCount; i++)
+            {
+                if (selectedWord.Contains(guessedWord[i]))
+                {
+                    //Debug.Log("WORD FOUND: " + guessedWord[i]);
+
+                    if (selectedWord[i] == guessedWord[i])
+                    {
+                        TileManager.Instance.ChangeTileColor(currentRow, i, Color.green);
+                        KeyboardManager.Instance.UpdateKeyboardColor(guessedWord[i].ToString(), Color.green);
+                    }
+                    else
+                    {
+                        TileManager.Instance.ChangeTileColor(currentRow, i, Color.yellow);
+                        KeyboardManager.Instance.UpdateKeyboardColor(guessedWord[i].ToString(), Color.yellow);
+                    }
+                }
+                else
+                {
+                    TileManager.Instance.ChangeTileColor(currentRow, i, Color.gray);
+                    KeyboardManager.Instance.UpdateKeyboardColor(guessedWord[i].ToString(), Color.gray);
+                }
+            }
+        }
         guessedWord = "";
+
+        if (currentRow >= rowCount - 1 || bIsCorrectWord && Constant.currentGamemode != Constant.GameMode.TimeTrail)
+        {
+            StartCoroutine(ScoreManager.Instance.GameOver(currentRow, rowCount - 1));
+        }
+
+        if (Constant.currentGamemode == Constant.GameMode.TimeTrail && bIsCorrectWord)
+        {
+            ScoreManager.Instance.CalculateScore(currentRow, rowCount);
+
+            correctGuessCount += 1;
+            correctGuessCountText.text = $"Correct Guesses: { correctGuessCount }";
+
+            Invoke(nameof(ResetData), 1.5f);            
+        }
+    }
+
+    void ResetData()
+    {
+        currentRow = 0;
+        currentColumn = 0;
+
+        selectedWord = selectedWordsList[UnityEngine.Random.Range(0, selectedWordsList.Count)];
+        selectedWord = selectedWord.ToUpper();
+        KeyboardManager.Instance.ResetKeys();
+        TileManager.Instance.ResetTileColor();
+
+    }
+
+    void CheckTimer()
+    {
+        timeLeft -= 1;
+        timeLeftText.text = $"Time: { timeLeft }";
+
+        if (timeLeft <= 0)
+        {
+            correctGuessCountText.gameObject.SetActive(false);
+            timeLeftText.gameObject.SetActive(false);
+            StartCoroutine(ScoreManager.Instance.GameOver(currentRow, rowCount - 1));
+
+            CancelInvoke(nameof(CheckTimer));
+        }
     }
 }
