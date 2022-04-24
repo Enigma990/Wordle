@@ -99,7 +99,7 @@ public class GameManager : MonoBehaviour
         }
 
 
-        Handheld.Vibrate();
+        //Handheld.Vibrate();
     }
 
     public void OnClick_EnterPressed()
@@ -112,7 +112,8 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        if (!selectedWordsList.Contains(guessedWord))
+
+        if (!selectedWordsList.Contains(guessedWord.ToLower()))
         {
             Handheld.Vibrate();
 
